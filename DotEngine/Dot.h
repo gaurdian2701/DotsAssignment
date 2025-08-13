@@ -20,7 +20,5 @@ public:
 
 	uint8_t m_Health = 3;
 
-	bool m_Overridden = false;
-	bool m_IsBeingUsed = false;
 };
 

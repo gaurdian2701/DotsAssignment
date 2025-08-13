@@ -27,21 +27,13 @@ void Dot::Render(DotRenderer* aRenderer, float dt)
 
 	m_Position += m_Velocity * DotVelocity * dt;
 
-	if (!m_Overridden)
-	{
+	float redColor = (glm::cos((m_TotalTime + m_StartPos.x) * 0.1f) * 0.5f + 0.5f) * 255.0f;
 
-		float redColor = (glm::cos((m_TotalTime + m_StartPos.x) * 0.1f) * 0.5f + 0.5f) * 255.0f;
+	float greenColor = (glm::cos((m_TotalTime + m_StartPos.y) * 0.9f) * 0.5f + 0.5f) * 255.0f;
 
-		float greenColor = (glm::cos((m_TotalTime + m_StartPos.y) * 0.9f) * 0.5f + 0.5f) * 255.0f;
+	float blueColor = (glm::cos(m_TotalTime * 0.4f) * 0.5f + 0.5f) * 255.0f;
 
-		float blueColor = (glm::cos(m_TotalTime * 0.4f) * 0.5f + 0.5f) * 255.0f;
-
-		aRenderer->SetDrawColor(redColor, greenColor, blueColor, 255);
-	}
-	else 
-	{
-		aRenderer->SetDrawColor(255, 255, 255, 255);
-	}
+	aRenderer->SetDrawColor(redColor, greenColor, blueColor, 255);
 
 	aRenderer->DrawFilledCircle(m_Position.x, m_Position.y, m_Radius);
 

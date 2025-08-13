@@ -1,13 +1,10 @@
 #include "Game.h"
 #include "DotRenderer.h"
 #include "Dot.h"
-#include <cstdlib>
 #include "glm/glm.hpp"
 #include <algorithm>
 
 
-std::vector<Dot*> m_Dots;
-const int m_DotAmount = 1000;
 
 Game::Game(DotRenderer* aRenderer)
 {
@@ -20,22 +17,22 @@ Game::Game(DotRenderer* aRenderer)
 		Dot* dot = new Dot(startPos, 3);
 		m_Dots.push_back(dot);
 	}
-
-	//To debug collision
-	m_Dots[0]->m_Overridden = true;
-	m_Dots[0]->m_Radius = 10;
-	//To debug collision
 }
 
 void Game::Update(float aDeltaTime)
 {
 	glm::vec2 NewDotStartPos = { 0.0f, 0.0f };
+	Dot* dot1 = nullptr;
+	Dot* dot2 = nullptr;
 
-	for (Dot* dot1 : m_Dots)
+	for (size_t i = 0; i < m_Dots.size(); i++)
 	{
-		for (Dot* dot2 : m_Dots)
+		dot1 = m_Dots[i];
+		for(size_t j = i + 1; j < m_Dots.size(); j++)
 		{
-			if (dot1 != dot2 && dot1 != nullptr && dot2 != nullptr)
+			dot2 = m_Dots[j];
+
+			if (dot1 != nullptr && dot2 != nullptr)
 			{
 				float dist = glm::distance(dot1->m_Position, dot2->m_Position);
 				float minDist = dot1->m_Radius + dot2->m_Radius;
@@ -72,6 +69,8 @@ void Game::Update(float aDeltaTime)
 		}
 	}
 }
+
+
 
 void Game::CleanUp()
 {
