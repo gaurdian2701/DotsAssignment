@@ -1,5 +1,9 @@
 ﻿#pragma once
+
 #include <glm/vec2.hpp>
+#include <SDL3/SDL_render.h>
+
+class SDLRenderer;
 class Dot;
 class glm::vec2;
 
@@ -9,6 +13,7 @@ public:
     QuadTree(glm::vec2 topLeftBoundary, glm::vec2 bottomRightBoundary);
     ~QuadTree();
     void Insert(Dot* aDot);
+    void Visualize(SDL_Renderer* renderer);
     
 private:
     Dot* m_DotInTree = nullptr;

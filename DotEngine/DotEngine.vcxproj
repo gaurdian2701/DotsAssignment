@@ -156,6 +156,7 @@
     <ClCompile Include="QuadTree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="Dot.h" />
     <ClInclude Include="DotRenderer.h" />
     <ClInclude Include="Game.h" />

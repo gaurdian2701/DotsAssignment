@@ -1,5 +1,7 @@
 ﻿#include "QuadTree.h"
 
+#include <SDL3/SDL_oldnames.h>
+
 #include "Dot.h"
 
 QuadTree::QuadTree(glm::vec2 topLeftBoundary, glm::vec2 bottomRightBoundary)
@@ -25,8 +27,9 @@ void QuadTree::Insert(Dot* aDot)
     int xMidPoint = (m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2;
     int yMidPoint = (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2;
 
+    //Quad boundaries are close to the size of the dot
     if (m_BottomRightBoundary.x - m_TopLeftBoundary.x - 2 * aDot->m_Radius <= 1 &&
-        m_BottomRightBoundary.y - m_TopLeftBoundary.y - 2 * aDot->m_Radius <= 1) //Quad boundaries are close to the size of the dot
+        m_BottomRightBoundary.y - m_TopLeftBoundary.y - 2 * aDot->m_Radius <= 1) 
     {
         if (m_DotInTree == nullptr)
             m_DotInTree = aDot;
@@ -73,4 +76,37 @@ void QuadTree::Insert(Dot* aDot)
     }
 }
 
+void QuadTree::Visualize(SDL_Renderer* renderer)
+{
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    
+    SDL_RenderLine(renderer, m_TopLeftBoundary.x,
+        m_TopLeftBoundary.y,
+        m_BottomRightBoundary.x,
+        m_TopLeftBoundary.y); //Top line
+
+    SDL_RenderLine(renderer, m_TopLeftBoundary.x,
+        m_BottomRightBoundary.y,
+        m_BottomRightBoundary.x,
+        m_BottomRightBoundary.y); //Bottom line
+
+    SDL_RenderLine(renderer, m_TopLeftBoundary.x,
+        m_TopLeftBoundary.y,
+        m_TopLeftBoundary.x,
+        m_BottomRightBoundary.y); //Left Line
+
+    SDL_RenderLine(renderer, m_BottomRightBoundary.x,
+        m_TopLeftBoundary.y,
+        m_BottomRightBoundary.x,
+        m_BottomRightBoundary.y); //RightLine
+    
+    if (m_TopLeftQuadTree != nullptr)
+        m_TopLeftQuadTree->Visualize(renderer);
+    if (m_TopRightQuadTree != nullptr)
+        m_TopRightQuadTree->Visualize(renderer);
+    if (m_BottomLeftQuadTree != nullptr)
+        m_BottomLeftQuadTree->Visualize(renderer);
+    if (m_BottomRightQuadTree != nullptr)
+        m_BottomRightQuadTree->Visualize(renderer);
+}
 
