@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "DotRenderer.h"
 #include "Dot.h"
+#include "QuadTree.h"
+#include "future"
 #include "glm/glm.hpp"
 #include <algorithm>
 
@@ -14,6 +16,11 @@ Game::Game(DotRenderer* aRenderer)
 		SDL_TEXTUREACCESS_STREAMING,
 		SCREEN_WIDTH,
 		SCREEN_HEIGHT);
+
+	m_CollisionQuadTree = new QuadTree(glm::vec2(0, 0),
+		glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	
+	NumberOfThreads = std::thread::hardware_concurrency();
 	
 	glm::vec2 startPos = { 0.0f, 0.0f };
 
@@ -21,6 +28,7 @@ Game::Game(DotRenderer* aRenderer)
 	{
 		startPos = { std::rand() % SCREEN_WIDTH, std::rand() % SCREEN_HEIGHT};
 		Dot* dot = new Dot(startPos, 3);
+		m_CollisionQuadTree->Insert(dot);
 		m_Dots.push_back(dot);
 	}
 }
@@ -66,22 +74,30 @@ void Game::Update(float aDeltaTime)
 			}
 		}
 	}
-
-
 }
 
 void Game::Render(float aDeltaTime)
 {
-	std::fill(m_Renderer->m_PixelBuffer.begin(), m_Renderer->m_PixelBuffer.end(), 0x00000000);
-	
-	for (Dot* d : m_Dots)
+	std::fill(m_Renderer->m_PixelBuffer.begin(),
+		m_Renderer->m_PixelBuffer.end(),
+		0x00000000);
+
+	std::vector<std::future<void>> futures;
+	int dotsPerThread = m_Dots.size() / NumberOfThreads;
+
+	for (int i = 0; i < NumberOfThreads; i++)
 	{
-		if (d != nullptr)
-		{
-			d->Render(m_Renderer, aDeltaTime);
-		}
+		int startingIndex = i * dotsPerThread;
+		int endingIndex = i == NumberOfThreads - 1 ? m_Dots.size() : startingIndex + dotsPerThread;
+		futures.push_back(std::async(std::launch::async, &Game::RenderDotsPartition, this,
+			startingIndex, endingIndex, aDeltaTime));
 	}
 
+	for (auto& f : futures)
+	{
+		f.get();
+	}
+	
 	SDL_UpdateTexture(m_ScreenTexture,
 		nullptr,
 		m_Renderer->m_PixelBuffer.data(),
@@ -90,6 +106,17 @@ void Game::Render(float aDeltaTime)
 	SDL_RenderTexture(m_Renderer->GetSDLRenderer(), m_ScreenTexture, nullptr, nullptr);
 }
 
+void Game::RenderDotsPartition(int startingPixelBufferIndex,
+	int endingPixelBufferIndex, float aDeltaTime)
+{
+	for (int i = startingPixelBufferIndex; i < endingPixelBufferIndex; i++)
+	{
+		if (m_Dots[i] != nullptr)
+		{
+			m_Dots[i]->Render(m_Renderer, aDeltaTime);
+		}
+	}
+}
 
 void Game::CleanUp()
 {
@@ -103,5 +130,6 @@ void Game::CleanUp()
 	}
 
 	delete m_Renderer;
+	delete m_CollisionQuadTree;
 	SDL_DestroyTexture(m_ScreenTexture);
 }
