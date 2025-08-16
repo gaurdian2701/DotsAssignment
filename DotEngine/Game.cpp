@@ -9,6 +9,12 @@
 Game::Game(DotRenderer* aRenderer)
 {
 	m_Renderer = aRenderer;
+	m_ScreenTexture = SDL_CreateTexture(m_Renderer->GetSDLRenderer(),
+		SDL_PIXELFORMAT_ARGB8888,
+		SDL_TEXTUREACCESS_STREAMING,
+		SCREEN_WIDTH,
+		SCREEN_HEIGHT);
+	
 	glm::vec2 startPos = { 0.0f, 0.0f };
 
 	for (size_t i = 0; i < m_DotAmount; i++)
@@ -61,6 +67,13 @@ void Game::Update(float aDeltaTime)
 		}
 	}
 
+
+}
+
+void Game::Render(float aDeltaTime)
+{
+	std::fill(m_Renderer->m_PixelBuffer.begin(), m_Renderer->m_PixelBuffer.end(), 0x00000000);
+	
 	for (Dot* d : m_Dots)
 	{
 		if (d != nullptr)
@@ -68,8 +81,14 @@ void Game::Update(float aDeltaTime)
 			d->Render(m_Renderer, aDeltaTime);
 		}
 	}
-}
 
+	SDL_UpdateTexture(m_ScreenTexture,
+		nullptr,
+		m_Renderer->m_PixelBuffer.data(),
+		SCREEN_WIDTH * sizeof(uint32_t));
+
+	SDL_RenderTexture(m_Renderer->GetSDLRenderer(), m_ScreenTexture, nullptr, nullptr);
+}
 
 
 void Game::CleanUp()
@@ -82,4 +101,7 @@ void Game::CleanUp()
 			d = nullptr;
 		}
 	}
+
+	delete m_Renderer;
+	SDL_DestroyTexture(m_ScreenTexture);
 }

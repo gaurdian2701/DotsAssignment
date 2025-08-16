@@ -32,10 +32,8 @@ void Dot::Render(DotRenderer* aRenderer, float dt)
 	float greenColor = (glm::cos((m_TotalTime + m_StartPos.y) * 0.9f) * 0.5f + 0.5f) * 255.0f;
 
 	float blueColor = (glm::cos(m_TotalTime * 0.4f) * 0.5f + 0.5f) * 255.0f;
-
-	aRenderer->SetDrawColor(redColor, greenColor, blueColor, 255);
-
-	aRenderer->DrawFilledCircle(m_Position.x, m_Position.y, m_Radius);
+	
+	aRenderer->DrawFilledCircle(m_Position.x, m_Position.y, m_Radius, redColor, blueColor, greenColor);
 
 	if (m_Position.x - m_Radius < 0.0f)
 	{

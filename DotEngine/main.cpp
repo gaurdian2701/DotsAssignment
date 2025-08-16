@@ -82,6 +82,7 @@ int main(int argc, char* args[])
 		renderer->Clear();
 
 		game->Update(deltaTime);
+		game->Render(deltaTime);
 
 
 		// - FPS COUNTER -

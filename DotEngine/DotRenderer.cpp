@@ -3,9 +3,13 @@
 #include <SDL3/SDL.h>
 #include <cmath> 
 
+#include "Game.h"
+
 DotRenderer::DotRenderer(SDL_Window* window) : m_sdlRenderer(nullptr)
 {
 	m_sdlRenderer = SDL_CreateRenderer(window, nullptr);
+	m_pixelFormatDetails = SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_ARGB8888);
+	m_PixelBuffer.resize(SCREEN_WIDTH * SCREEN_HEIGHT, 0x00000000);
 	if (!m_sdlRenderer) return;
 }
 
@@ -82,14 +86,34 @@ void DotRenderer::DrawCircle(int centerX, int centerY, int radius)
 	}
 }
 
-void DotRenderer::DrawFilledCircle(int centerX, int centerY, int radius)
+void DotRenderer::DrawFilledCircle(int centerX, int centerY, int radius, int redColor, int greenColor, int blueColor)
 {
 	if (!m_sdlRenderer) return;
 
-	for (int y = -radius; y <= radius; y++) 
+	int minX = std::max(0, centerX - radius);
+	int maxX = std::min(SCREEN_WIDTH - 1, centerX + radius);
+	int minY = std::max(0, centerY - radius);
+	int maxY = std::min(SCREEN_HEIGHT - 1, centerY + radius);
+
+	for (int y = minY; y <= maxY; y++)
 	{
-		int x = static_cast<int>(std::sqrt(radius * radius - y * y));
-		SDL_RenderLine(m_sdlRenderer, centerX - x, centerY + y, centerX + x, centerY + y);
+		for (int x = minX; x <= maxX; x++)
+		{
+			int dx = x - centerX;
+			int dy = y - centerY;
+
+			if (dx * dx + dy * dy <= radius * radius)
+			{
+				int index = y * SCREEN_WIDTH + x;
+				m_PixelBuffer[index] = SDL_MapRGBA(
+					m_pixelFormatDetails,
+					nullptr,
+					redColor,
+					blueColor,
+					greenColor,
+					255);
+			}
+		}
 	}
 }
 
