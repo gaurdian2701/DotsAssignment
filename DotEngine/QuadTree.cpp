@@ -1,18 +1,17 @@
 ﻿#include "QuadTree.h"
-
-#include <SDL3/SDL_oldnames.h>
-
+#include <iostream>
 #include "Dot.h"
 
-QuadTree::QuadTree(glm::vec2 topLeftBoundary, glm::vec2 bottomRightBoundary)
+QuadTree::QuadTree(glm::vec2 topLeftBoundary, glm::vec2 bottomRightBoundary, uint8_t currentDepth)
 {
     m_TopLeftBoundary = topLeftBoundary;
     m_BottomRightBoundary = bottomRightBoundary;
+    m_currentDepth = currentDepth;
 }
 
 QuadTree::~QuadTree()
 {
-    m_DotInTree = nullptr;
+    m_DotsInTree.clear();
     delete m_TopLeftQuadTree;
     delete m_TopRightQuadTree;
     delete m_BottomLeftQuadTree;
@@ -21,85 +20,145 @@ QuadTree::~QuadTree()
 
 void QuadTree::Insert(Dot* aDot)
 {
-    if (m_DotInTree != nullptr)
-        return;
+    // Quad boundaries are close to the size of the dot
+     if (m_currentDepth == m_MaxDepth)
+     {
+         m_DotsInTree.push_back(aDot);
+         return;
+     }
 
-    int xMidPoint = (m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2;
-    int yMidPoint = (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2;
-
-    //Quad boundaries are close to the size of the dot
-    if (m_BottomRightBoundary.x - m_TopLeftBoundary.x - 2 * aDot->m_Radius <= 1 &&
-        m_BottomRightBoundary.y - m_TopLeftBoundary.y - 2 * aDot->m_Radius <= 1) 
+    if (aDot->m_Position.x < (m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2) //Left Side
     {
-        if (m_DotInTree == nullptr)
-            m_DotInTree = aDot;
-        return;
-    }
-        
-    if (aDot->m_Position.x < xMidPoint) //Left Side
-    {
-        if (aDot->m_Position.y < yMidPoint)//Top Left
+        if (aDot->m_Position.y < (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2) //Top Left
         {
-            if (m_TopLeftQuadTree == nullptr)
+            if (m_TopLeftQuadTree == nullptr && m_currentDepth < m_MaxDepth)
+            {
                 m_TopLeftQuadTree = new QuadTree(
                     m_TopLeftBoundary,
-                    glm::vec2(xMidPoint, yMidPoint));
+                    glm::vec2((m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2,
+                              (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2),
+                              m_currentDepth+1);
+            }
             m_TopLeftQuadTree->Insert(aDot);
         }
-        else if (aDot->m_Position.y >= yMidPoint) //Bottom Left
+        else if (aDot->m_Position.y >= (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2) //Bottom Left
         {
-            if (m_BottomLeftQuadTree == nullptr)
+            if (m_BottomLeftQuadTree == nullptr && m_currentDepth < m_MaxDepth)
+            {
                 m_BottomLeftQuadTree = new QuadTree(
-                    glm::vec2(m_TopLeftBoundary.x, yMidPoint),
-                    glm::vec2(xMidPoint, m_BottomRightBoundary.y));
+                    glm::vec2(m_TopLeftBoundary.x,
+                              (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2),
+                    glm::vec2((m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2,
+                              m_BottomRightBoundary.y),
+                              m_currentDepth+1);
+            }
             m_BottomLeftQuadTree->Insert(aDot);
         }
     }
-    else if (aDot->m_Position.x >= xMidPoint) //Right Side
+    else if (aDot->m_Position.x >= (m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2) //Right Side
     {
-        if (aDot->m_Position.y < yMidPoint) //Top Right
+        if (aDot->m_Position.y < (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2) //Top Right
         {
-            if (m_TopRightQuadTree == nullptr)
+            if (m_TopRightQuadTree == nullptr && m_currentDepth < m_MaxDepth)
+            {
                 m_TopRightQuadTree = new QuadTree(
-                    glm::vec2(xMidPoint, m_TopLeftBoundary.y),
-                    glm::vec2(m_BottomRightBoundary.x, yMidPoint));
+                    glm::vec2((m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2,
+                              m_TopLeftBoundary.y),
+                    glm::vec2(m_BottomRightBoundary.x,
+                              (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2),
+                              m_currentDepth+1);
+            }
             m_TopRightQuadTree->Insert(aDot);
         }
-        else if (aDot->m_Position.y >= yMidPoint) //Bottom Right
+        else if (aDot->m_Position.y >= (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2) //Bottom Right
         {
-            if (m_BottomRightQuadTree == nullptr)
+            if (m_BottomRightQuadTree == nullptr && m_currentDepth < m_MaxDepth)
+            {
                 m_BottomRightQuadTree = new QuadTree(
-                    glm::vec2(xMidPoint, yMidPoint),
-                    m_BottomRightBoundary);
+                    glm::vec2((m_TopLeftBoundary.x + m_BottomRightBoundary.x) / 2,
+                              (m_TopLeftBoundary.y + m_BottomRightBoundary.y) / 2),
+                    m_BottomRightBoundary,
+                    m_currentDepth+1);
+            }
             m_BottomRightQuadTree->Insert(aDot);
         }
     }
 }
 
+void QuadTree::QueryRange(Dot* aDot, std::vector<Dot*>& closestDots,
+    glm::vec2& topLeftOfQueryBox, glm::vec2& bottomRightOfQueryBox)
+{
+    if (m_currentDepth < m_MaxDepth)
+    {
+        if (m_TopLeftQuadTree != nullptr &&
+            m_TopLeftQuadTree->IntersectsTree(topLeftOfQueryBox, bottomRightOfQueryBox))
+        {
+            m_TopLeftQuadTree->QueryRange(aDot, closestDots,
+                topLeftOfQueryBox, bottomRightOfQueryBox);
+        }
+        if (m_BottomLeftQuadTree != nullptr &&
+            m_BottomLeftQuadTree->IntersectsTree(topLeftOfQueryBox, bottomRightOfQueryBox))
+        {
+            m_BottomLeftQuadTree->QueryRange(aDot, closestDots,
+                topLeftOfQueryBox, bottomRightOfQueryBox);
+        }
+        if (m_TopRightQuadTree != nullptr &&
+            m_TopRightQuadTree->IntersectsTree(topLeftOfQueryBox, bottomRightOfQueryBox))
+        {
+            m_TopRightQuadTree->QueryRange(aDot, closestDots,
+                topLeftOfQueryBox, bottomRightOfQueryBox);
+        }
+        if (m_BottomRightQuadTree != nullptr &&
+            m_BottomRightQuadTree->IntersectsTree(topLeftOfQueryBox, bottomRightOfQueryBox))
+        {
+            m_BottomRightQuadTree->QueryRange(aDot, closestDots,
+                topLeftOfQueryBox, bottomRightOfQueryBox);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_DotsInTree.size(); i++)
+        {
+            if (m_DotsInTree[i] != nullptr)
+            {
+                closestDots.push_back(m_DotsInTree[i]);
+            }
+        }
+    }
+}
+
+bool QuadTree::IntersectsTree(glm::vec2& topLeftOfQueryBox, glm::vec2& bottomRightOfQueryBox)
+{
+    return !(bottomRightOfQueryBox.x < m_TopLeftBoundary.x ||
+             topLeftOfQueryBox.x > m_BottomRightBoundary.x ||
+             bottomRightOfQueryBox.y < m_TopLeftBoundary.y ||
+             topLeftOfQueryBox.y > m_BottomRightBoundary.y);
+}
+
 void QuadTree::Visualize(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    
-    SDL_RenderLine(renderer, m_TopLeftBoundary.x,
-        m_TopLeftBoundary.y,
-        m_BottomRightBoundary.x,
-        m_TopLeftBoundary.y); //Top line
 
     SDL_RenderLine(renderer, m_TopLeftBoundary.x,
-        m_BottomRightBoundary.y,
-        m_BottomRightBoundary.x,
-        m_BottomRightBoundary.y); //Bottom line
+                   m_TopLeftBoundary.y,
+                   m_BottomRightBoundary.x,
+                   m_TopLeftBoundary.y); //Top line
 
     SDL_RenderLine(renderer, m_TopLeftBoundary.x,
-        m_TopLeftBoundary.y,
-        m_TopLeftBoundary.x,
-        m_BottomRightBoundary.y); //Left Line
+                   m_BottomRightBoundary.y,
+                   m_BottomRightBoundary.x,
+                   m_BottomRightBoundary.y); //Bottom line
+
+    SDL_RenderLine(renderer, m_TopLeftBoundary.x,
+                   m_TopLeftBoundary.y,
+                   m_TopLeftBoundary.x,
+                   m_BottomRightBoundary.y); //Left Line
 
     SDL_RenderLine(renderer, m_BottomRightBoundary.x,
-        m_TopLeftBoundary.y,
-        m_BottomRightBoundary.x,
-        m_BottomRightBoundary.y); //RightLine
-    
+                   m_TopLeftBoundary.y,
+                   m_BottomRightBoundary.x,
+                   m_BottomRightBoundary.y); //RightLine
+
     if (m_TopLeftQuadTree != nullptr)
         m_TopLeftQuadTree->Visualize(renderer);
     if (m_TopRightQuadTree != nullptr)
@@ -109,4 +168,3 @@ void QuadTree::Visualize(SDL_Renderer* renderer)
     if (m_BottomRightQuadTree != nullptr)
         m_BottomRightQuadTree->Visualize(renderer);
 }
-

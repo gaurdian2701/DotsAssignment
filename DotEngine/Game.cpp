@@ -22,7 +22,7 @@ Game::Game(DotRenderer* aRenderer)
     for (size_t i = 0; i < m_DotAmount; i++)
     {
         startPos = {std::rand() % SCREEN_WIDTH, std::rand() % SCREEN_HEIGHT};
-        Dot* dot = new Dot(startPos, 3);
+        Dot* dot = new Dot(startPos, 2);
         m_Dots.push_back(dot);
     }
 }
@@ -41,7 +41,7 @@ void Game::Update(float aDeltaTime)
 void Game::InitQuadTree()
 {
     m_CollisionQuadTree = new QuadTree(glm::vec2(0, 0),
-                                       glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+                                       glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 
     for (size_t i = 0; i < m_DotAmount; i++)
         m_CollisionQuadTree->Insert(m_Dots[i]);
@@ -50,28 +50,36 @@ void Game::InitQuadTree()
 void Game::CalculateCollisions()
 {
     glm::vec2 NewDotStartPos = {0.0f, 0.0f};
+
     Dot* dot1 = nullptr;
     Dot* dot2 = nullptr;
-    
-    for (size_t i = 0; i < m_Dots.size(); i++)
+    std::vector<Dot*> dotsToCollideWith;
+    glm::vec2 topLeftOfQueryBox = {0.0f, 0.0f};
+    glm::vec2 bottomRightOfQueryBox = {0.0f, 0.0f};
+    for (size_t i = 0; i < m_DotAmount; i++)
     {
         dot1 = m_Dots[i];
-        for (size_t j = i + 1; j < m_Dots.size(); j++)
+        topLeftOfQueryBox = {dot1->m_Position.x - 2 * dot1->m_Radius,
+                dot1->m_Position.y - 2 * dot1->m_Radius};
+        bottomRightOfQueryBox = {dot1->m_Position.x + 2 * dot1->m_Radius,
+                    dot1->m_Position.y + 2 * dot1->m_Radius};
+        m_CollisionQuadTree->QueryRange(dot1, dotsToCollideWith,
+            topLeftOfQueryBox, bottomRightOfQueryBox);
+        for (size_t j = 0; j < dotsToCollideWith.size(); j++)
         {
-            dot2 = m_Dots[j];
-
-            if (dot1 != nullptr && dot2 != nullptr)
+            dot2 = dotsToCollideWith[j];
+            if (dot1 != nullptr && dot2 != nullptr && dot1 != dot2)
             {
                 float dist = glm::distance(dot1->m_Position, dot2->m_Position);
                 float minDist = dot1->m_Radius + dot2->m_Radius;
-
+        
                 if (dist < minDist)
                 {
                     glm::vec2 normal = glm::normalize(dot2->m_Position - dot1->m_Position);
-
+        
                     dot1->m_Velocity = glm::reflect(dot1->m_Velocity, normal);
                     dot2->m_Velocity = glm::reflect(dot2->m_Velocity, -normal);
-
+        
                     float overlap1 = 1.5f * ((minDist + 1) - dist);
                     float overlap2 = 1.5f * (minDist - dist);
                     dot1->m_Position -= normal * overlap1;
@@ -87,6 +95,7 @@ void Game::CalculateCollisions()
                 }
             }
         }
+        dotsToCollideWith.clear();
     }
 }
 
