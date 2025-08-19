@@ -59,10 +59,10 @@ void Game::CalculateCollisions()
     for (size_t i = 0; i < m_DotAmount; i++)
     {
         dot1 = m_Dots[i];
-        topLeftOfQueryBox = {dot1->m_Position.x - 2 * dot1->m_Radius,
-                dot1->m_Position.y - 2 * dot1->m_Radius};
-        bottomRightOfQueryBox = {dot1->m_Position.x + 2 * dot1->m_Radius,
-                    dot1->m_Position.y + 2 * dot1->m_Radius};
+        topLeftOfQueryBox = {dot1->m_Position.x - dot1->m_Radius,
+                dot1->m_Position.y - dot1->m_Radius};
+        bottomRightOfQueryBox = {dot1->m_Position.x + dot1->m_Radius,
+                    dot1->m_Position.y + dot1->m_Radius};
         m_CollisionQuadTree->QueryRange(dot1, dotsToCollideWith,
             topLeftOfQueryBox, bottomRightOfQueryBox);
         for (size_t j = 0; j < dotsToCollideWith.size(); j++)
