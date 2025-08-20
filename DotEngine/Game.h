@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "Dot.h"
 #include "Config.h"
 
 class QuadTree;
@@ -16,10 +17,12 @@ public:
 	Game(DotRenderer* aRenderer);
 	void Update(float aDeltaTime);
 	void CalculateCollisions();
+	void DoCollisionsAsync(std::vector<Dot*>& dotsToCalculateCollisionsFor);
+	void CalculateCollisionsAsync();
 	void Render(float aDeltaTime);
 	void CleanUp();
 
-	std::vector<Dot*> m_Dots;
+	std::vector<Dot> m_Dots;
 
 private:
 	DotRenderer* m_Renderer = nullptr;

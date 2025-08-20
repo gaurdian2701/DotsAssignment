@@ -12,13 +12,11 @@ public:
 	void TakeDamage(int someDamage);
 
 	glm::vec2 m_Position;
-	glm::vec2 m_StartPos;
 	glm::vec2 m_Velocity;
 
 	float m_TotalTime = 0;
 	float m_Radius = 0;
 
 	uint8_t m_Health = 3;
-
 };
 
