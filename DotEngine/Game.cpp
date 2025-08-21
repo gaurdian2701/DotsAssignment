@@ -15,6 +15,8 @@ Game::Game(DotRenderer* aRenderer)
                                         SCREEN_HEIGHT);
 
     NumberOfThreads = std::thread::hardware_concurrency();
+    m_widthDistribution = std::uniform_real_distribution<float>(0.0f, SCREEN_WIDTH);
+    m_heightDistribution = std::uniform_real_distribution<float>(0.0f, SCREEN_HEIGHT);
 
     glm::vec2 startPos = {0.0f, 0.0f};
 
@@ -29,7 +31,6 @@ Game::Game(DotRenderer* aRenderer)
 void Game::Update(float aDeltaTime)
 {
     InitQuadTree();
-    // CalculateCollisions();
     CalculateCollisionsAsync();
     if (DrawQuadTreeVisualization)
     {
@@ -171,7 +172,8 @@ void Game::DoCollisionsAsync(std::vector<Dot*>& dotsToCalculateCollisionsFor)
                 }
                 if (dot1->m_Health <= 0)
                 {
-                    dot1->m_Position = {std::rand() % SCREEN_WIDTH, std::rand() % SCREEN_HEIGHT};
+                    dot1->m_Position = {m_widthDistribution(m_randomGenerator),
+                        m_heightDistribution(m_randomGenerator)};
                     dot1->m_Health = 3;
                     dot1->m_Radius = 3;
                 }

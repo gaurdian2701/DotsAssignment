@@ -1,5 +1,6 @@
 #pragma once
 
+#include <random>
 #include <vector>
 #include "Dot.h"
 #include "Config.h"
@@ -23,6 +24,9 @@ public:
 	void CleanUp();
 
 	std::vector<Dot> m_Dots;
+	std::random_device m_randomGenerator;
+	std::uniform_real_distribution<float> m_widthDistribution;
+	std::uniform_real_distribution<float> m_heightDistribution;
 
 private:
 	DotRenderer* m_Renderer = nullptr;
